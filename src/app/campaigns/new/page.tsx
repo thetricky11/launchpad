@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Nav } from '@/components/nav'
-import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 
 const PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'Twitter/X', 'LinkedIn']
@@ -43,9 +41,7 @@ const sectionStyle: React.CSSProperties = {
 
 export default function NewCampaignPage() {
   const router = useRouter()
-  const supabase = createSupabaseBrowserClient()
   const [loading, setLoading] = useState(false)
-  const [brandId, setBrandId] = useState<string | null>(null)
 
   const [name, setName] = useState('')
   const [objective, setObjective] = useState('')
@@ -61,16 +57,6 @@ export default function NewCampaignPage() {
   const [minFollowers, setMinFollowers] = useState('')
   const [maxBudgetPerCreator, setMaxBudgetPerCreator] = useState('')
 
-  useEffect(() => {
-    const fetchBrand = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: brand } = await supabase.from('brands').select('id').eq('user_id', user.id).single()
-      if (brand) setBrandId(brand.id)
-    }
-    fetchBrand()
-  }, [supabase])
-
   const toggle = (arr: string[], val: string, setter: (v: string[]) => void) => {
     setter(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
   }
@@ -83,36 +69,46 @@ export default function NewCampaignPage() {
   ]
 
   const handleSubmit = async () => {
-    if (!name || !brandId) { toast.error('Campaign name required'); return }
+    if (!name) { toast.error('Campaign name is required'); return }
     setLoading(true)
     try {
-      const { data: campaign, error } = await supabase.from('campaigns').insert({
-        brand_id: brandId,
-        name,
-        objective: objective || null,
-        budget_total: budgetNum || null,
-        budget_remaining: budgetNum || null,
-        platforms: platforms.length ? platforms : null,
-        content_types: contentTypes.length ? contentTypes : null,
-        timeline_start: startDate || null,
-        timeline_end: endDate || null,
-        brief_summary: briefSummary || null,
-        key_messages: keyMessages ? keyMessages.split('\n').filter(Boolean) : null,
-        hashtags: hashtags ? hashtags.split(',').map(h => h.trim().replace('#', '')).filter(Boolean) : null,
-        cta: cta || null,
-        status: 'draft',
-      }).select().single()
-      if (error) throw error
-      toast.success('Generating campaign...')
-      router.push(`/campaigns/${campaign.id}/generating`)
+      const res = await fetch('/api/campaigns/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          objective: objective || 'Brand Awareness',
+          budget_total: budgetNum || 10000,
+          platforms: platforms.length ? platforms : ['Instagram'],
+          content_types: contentTypes.length ? contentTypes : ['Reels/Short Video'],
+          timeline_start: startDate || null,
+          timeline_end: endDate || null,
+          brief_summary: briefSummary || `Campaign for ${name}`,
+          key_messages: keyMessages ? keyMessages.split('\n').filter(Boolean) : [],
+          hashtags: hashtags ? hashtags.split(',').map(h => h.trim().replace('#', '')).filter(Boolean) : [],
+          cta: cta || '',
+          min_followers: parseInt(minFollowers) || 10000,
+          max_budget_per_creator: parseInt(maxBudgetPerCreator) || 2000,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate campaign')
+      toast.success('Campaign generated!')
+      if (data.campaign_id) {
+        router.push(`/campaigns/${data.campaign_id}`)
+      } else {
+        // Show results inline if no campaign ID
+        toast.success('Campaign package ready!')
+        setLoading(false)
+      }
     } catch (err: unknown) {
       toast.error((err as Error).message || 'Failed to create campaign')
       setLoading(false)
     }
   }
 
-  const btnActive: React.CSSProperties = { background: '#FF6117', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }
-  const btnInactive: React.CSSProperties = { background: '#F6F7F9', color: '#505057', border: '1.5px solid #DADADE', padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500 }
+  const btnActive: React.CSSProperties = { background: '#FF6117', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600, transition: 'all 0.15s' }
+  const btnInactive: React.CSSProperties = { background: '#F6F7F9', color: '#505057', border: '1.5px solid #DADADE', padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500, transition: 'all 0.15s' }
 
   return (
     <div style={{ minHeight: '100vh', background: '#F6F7F9' }}>
@@ -123,7 +119,7 @@ export default function NewCampaignPage() {
           <p style={{ color: '#7B7B84', fontSize: '0.95rem' }}>Fill in the details and let AI do the heavy lifting</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '2rem', alignItems: 'start' }} className="campaign-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '2rem', alignItems: 'start' }}>
           {/* Main form */}
           <div>
             {/* Campaign basics */}
@@ -137,7 +133,7 @@ export default function NewCampaignPage() {
                 <label style={labelStyle}>Campaign objective</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {OBJECTIVES.map(obj => (
-                    <button key={obj} onClick={() => setObjective(obj)} style={objective === obj ? btnActive : btnInactive}>{obj}</button>
+                    <button type="button" key={obj} onClick={() => setObjective(obj)} style={objective === obj ? btnActive : btnInactive}>{obj}</button>
                   ))}
                 </div>
               </div>
@@ -168,7 +164,7 @@ export default function NewCampaignPage() {
                 <label style={labelStyle}>Platforms</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {PLATFORMS.map(p => (
-                    <button key={p} onClick={() => toggle(platforms, p, setPlatforms)} style={platforms.includes(p) ? btnActive : btnInactive}>{p}</button>
+                    <button type="button" key={p} onClick={() => toggle(platforms, p, setPlatforms)} style={platforms.includes(p) ? btnActive : btnInactive}>{p}</button>
                   ))}
                 </div>
               </div>
@@ -176,7 +172,7 @@ export default function NewCampaignPage() {
                 <label style={labelStyle}>Content types</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {CONTENT_TYPES.map(ct => (
-                    <button key={ct} onClick={() => toggle(contentTypes, ct, setContentTypes)} style={contentTypes.includes(ct) ? btnActive : btnInactive}>{ct}</button>
+                    <button type="button" key={ct} onClick={() => toggle(contentTypes, ct, setContentTypes)} style={contentTypes.includes(ct) ? btnActive : btnInactive}>{ct}</button>
                   ))}
                 </div>
               </div>
@@ -187,15 +183,17 @@ export default function NewCampaignPage() {
               <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Campaign brief</h2>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={labelStyle}>Brief summary</label>
-                <Textarea value={briefSummary} onChange={e => setBriefSummary(e.target.value)}
+                <textarea value={briefSummary} onChange={e => setBriefSummary(e.target.value)}
                   placeholder="Describe your campaign goals, product, and what you want creators to convey..."
-                  className="min-h-[120px]" style={{ background: '#F6F7F9', border: '1.5px solid #DADADE', color: '#1F1F21' }} />
+                  rows={4}
+                  style={{ ...inputStyle, resize: 'vertical', minHeight: 120 }} />
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={labelStyle}>Key messages (one per line)</label>
-                <Textarea value={keyMessages} onChange={e => setKeyMessages(e.target.value)}
+                <textarea value={keyMessages} onChange={e => setKeyMessages(e.target.value)}
                   placeholder={'Our product solves X\nKey benefit: Y\nUnique differentiator: Z'}
-                  className="min-h-[80px]" style={{ background: '#F6F7F9', border: '1.5px solid #DADADE', color: '#1F1F21' }} />
+                  rows={3}
+                  style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
@@ -219,6 +217,7 @@ export default function NewCampaignPage() {
             </div>
 
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={loading || !name}
               style={{
@@ -235,7 +234,7 @@ export default function NewCampaignPage() {
                 transition: 'background 0.15s',
               }}
             >
-              {loading ? 'Creating campaign…' : 'Generate My Campaign →'}
+              {loading ? 'Generating campaign… (this may take 30s)' : 'Generate My Campaign →'}
             </button>
           </div>
 

@@ -1,123 +1,74 @@
-import { redirect } from 'next/navigation'
+'use client'
+
 import Link from 'next/link'
-import { createSupabaseServerClient } from '@/lib/supabase'
-import { Nav } from '@/components/nav'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/lib/useAuth'
 
-export default async function DashboardPage() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+export default function DashboardPage() {
+  const { user, loading } = useAuth('/login')
 
-  const { data: brand } = await supabase.from('brands').select('*').eq('user_id', user.id).single()
-  const { data: campaigns } = await supabase.from('campaigns').select('*').eq('brand_id', brand?.id || '').order('created_at', { ascending: false })
-  
-  const totalCampaigns = campaigns?.length || 0
-  const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0
-  
-  const statusColors: Record<string, string> = {
-    draft: 'bg-zinc-700 text-zinc-300',
-    active: 'bg-emerald-500/20 text-emerald-400',
-    paused: 'bg-amber-500/20 text-amber-400',
-    completed: 'bg-indigo-500/20 text-indigo-400',
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#a1a1aa', fontSize: '1.125rem' }}>Loading...</div>
+      </div>
+    )
   }
 
-  return (
-    <div className="min-h-screen bg-zinc-950">
-      <Nav />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              {brand ? `Welcome back, ${brand.name}` : 'Welcome to LaunchPad'}
-            </h1>
-            <p className="text-zinc-400 mt-1">{brand?.industry || 'Set up your brand to get started'}</p>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/campaigns/new">
-              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white">
-                + New Campaign
-              </Button>
-            </Link>
-            <Link href="/billing">
-              <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-                Billing
-              </Button>
-            </Link>
-          </div>
-        </div>
+  if (!user) return null
 
-        {/* No brand prompt */}
-        {!brand && (
-          <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-2xl p-8 mb-8 text-center">
-            <h2 className="text-xl font-semibold text-white mb-2">Complete your setup</h2>
-            <p className="text-zinc-400 mb-4">Set up your brand profile to start building campaigns</p>
-            <Link href="/onboarding">
-              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white">Set up brand →</Button>
-            </Link>
-          </div>
-        )}
+  return (
+    <div style={{ minHeight: '100vh', background: '#09090b', color: 'white' }}>
+      {/* Nav */}
+      <nav style={{ borderBottom: '1px solid #27272a', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Link href="/dashboard" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', textDecoration: 'none' }}>🚀 LaunchPad</Link>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <Link href="/campaigns/new" style={{ background: '#4f46e5', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.875rem', fontWeight: '600' }}>
+            + New Campaign
+          </Link>
+          <Link href="/billing" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '0.875rem' }}>Billing</Link>
+          <span style={{ color: '#71717a', fontSize: '0.875rem' }}>{user.email}</span>
+          <button
+            onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/login' }}
+            style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+          >
+            Logout
+          </button>
+        </div>
+      </nav>
+
+      {/* Main content */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Welcome back, {user.name} 👋</h1>
+        <p style={{ color: '#a1a1aa', marginBottom: '2rem' }}>Here&apos;s your campaign overview</p>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           {[
-            { label: 'Total Campaigns', value: totalCampaigns, icon: '📊' },
-            { label: 'Active Campaigns', value: activeCampaigns, icon: '🚀' },
-            { label: 'Plan', value: brand?.plan?.charAt(0).toUpperCase() + (brand?.plan?.slice(1) || '') || 'Free', icon: '⭐' },
-            { label: 'Status', value: 'Live', icon: '✅' },
+            { label: 'Total Campaigns', value: '0', icon: '📊' },
+            { label: 'Active Campaigns', value: '0', icon: '🟢' },
+            { label: 'Creators Contacted', value: '0', icon: '📧' },
+            { label: 'Estimated Reach', value: '0', icon: '👁️' },
           ].map(stat => (
-            <div key={stat.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-              <div className="text-2xl mb-2">{stat.icon}</div>
-              <div className="text-2xl font-bold text-white">{stat.value}</div>
-              <div className="text-zinc-400 text-sm mt-1">{stat.label}</div>
+            <div key={stat.label} style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '0.75rem', padding: '1.5rem' }}>
+              <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{stat.icon}</div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{stat.value}</div>
+              <div style={{ color: '#71717a', fontSize: '0.875rem' }}>{stat.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Campaigns */}
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-4">Your Campaigns</h2>
-          {!campaigns || campaigns.length === 0 ? (
-            <div className="bg-zinc-900 border border-zinc-800 border-dashed rounded-2xl p-12 text-center">
-              <div className="text-5xl mb-4">🎯</div>
-              <h3 className="text-xl font-semibold text-white mb-2">No campaigns yet</h3>
-              <p className="text-zinc-400 mb-6">Create your first AI-powered influencer campaign</p>
-              <Link href="/campaigns/new">
-                <Button className="bg-indigo-600 hover:bg-indigo-500 text-white">Create campaign →</Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {campaigns.map(campaign => (
-                <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-600 transition-colors cursor-pointer h-full">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-semibold text-white">{campaign.name}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ${statusColors[campaign.status] || statusColors.draft}`}>
-                        {campaign.status}
-                      </span>
-                    </div>
-                    <p className="text-zinc-400 text-sm mb-4 line-clamp-2">{campaign.objective || 'No objective set'}</p>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-500">
-                        {campaign.budget_total ? `$${campaign.budget_total.toLocaleString()}` : 'No budget set'}
-                      </span>
-                      <span className="text-zinc-500">
-                        {campaign.platforms?.slice(0, 2).join(', ') || 'All platforms'}
-                      </span>
-                    </div>
-                    <div className="mt-3 text-xs text-zinc-600">
-                      {new Date(campaign.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+        {/* Empty state */}
+        <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '1rem', padding: '3rem', textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚀</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Create your first campaign</h2>
+          <p style={{ color: '#a1a1aa', marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+            Use AI to generate a complete influencer marketing campaign in seconds.
+          </p>
+          <Link href="/campaigns/new" style={{ display: 'inline-block', background: '#4f46e5', color: 'white', padding: '0.75rem 2rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '600' }}>
+            + New Campaign →
+          </Link>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

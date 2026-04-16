@@ -2,75 +2,96 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setLoading(true)
+    setError('')
+    
     try {
-      const res = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
+        credentials: 'same-origin',
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Login failed')
-      toast.success('Signed in!')
-      window.location.href = '/dashboard'
-    } catch (err: unknown) {
-      toast.error((err as Error).message || 'Login failed')
-    } finally {
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        setError(data.error || 'Login failed')
+        setLoading(false)
+        return
+      }
+      
+      // Hard redirect
+      window.location.replace('/dashboard')
+    } catch (err) {
+      setError('Network error — please try again')
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold text-white">🚀 LaunchPad</Link>
-          <p className="text-zinc-400 mt-2">Sign in to your account</p>
+    <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div style={{ width: '100%', maxWidth: '400px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', textDecoration: 'none' }}>🚀 LaunchPad</Link>
+          <p style={{ color: '#a1a1aa', marginTop: '0.5rem' }}>Sign in to your account</p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-zinc-300">Email</Label>
-              <Input
-                id="email" type="email" placeholder="admin@launchpad.app"
-                value={email} onChange={e => setEmail(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+        <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '1rem', padding: '2rem' }}>
+          {error && (
+            <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '0.75rem 1rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: '#d4d4d8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Email</label>
+              <input
+                type="email"
+                placeholder="admin@launchpad.app"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 required
+                style={{ width: '100%', padding: '0.75rem', background: '#27272a', border: '1px solid #3f3f46', borderRadius: '0.5rem', color: 'white', fontSize: '1rem', boxSizing: 'border-box' }}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-zinc-300">Password</Label>
-              <Input
-                id="password" type="password" placeholder="••••••••"
-                value={password} onChange={e => setPassword(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', color: '#d4d4d8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
                 required
+                style={{ width: '100%', padding: '0.75rem', background: '#27272a', border: '1px solid #3f3f46', borderRadius: '0.5rem', color: 'white', fontSize: '1rem', boxSizing: 'border-box' }}
               />
             </div>
-
-            <Button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6">
+            
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ width: '100%', padding: '0.875rem', background: loading ? '#4338ca' : '#4f46e5', color: 'white', border: 'none', borderRadius: '0.5rem', fontSize: '1rem', fontWeight: '600', cursor: loading ? 'wait' : 'pointer' }}
+            >
               {loading ? 'Signing in...' : 'Sign in →'}
-            </Button>
+            </button>
           </form>
         </div>
 
-        <p className="text-center text-zinc-500 mt-6">
+        <p style={{ textAlign: 'center', color: '#71717a', marginTop: '1.5rem' }}>
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-indigo-400 hover:text-indigo-300">Sign up</Link>
+          <Link href="/signup" style={{ color: '#818cf8', textDecoration: 'none' }}>Sign up</Link>
         </p>
       </div>
     </div>

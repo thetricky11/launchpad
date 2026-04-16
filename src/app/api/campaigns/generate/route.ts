@@ -1,197 +1,143 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServiceClient, createSupabaseServerClient } from '@/lib/supabase'
-import { searchCreators } from '@/lib/creatordb'
-import { scoreCampaignCreators, generateCampaignBrief, generateOutreachEmail } from '@/lib/anthropic'
+import { mockCreators } from '@/lib/mock-creators'
 import { sortCreatorsByScore } from '@/lib/scoring'
-import type { Campaign } from '@/types'
 
 export const maxDuration = 60
 
+// In-memory campaign store (for demo — resets on restart)
+const campaigns = new Map<string, Record<string, unknown>>()
+export { campaigns }
+
 export async function POST(req: NextRequest) {
   try {
-    const { campaignId } = await req.json()
-    if (!campaignId) return NextResponse.json({ error: 'campaignId required' }, { status: 400 })
+    const body = await req.json()
+    const { name, objective, budget_total, platforms, content_types, timeline_start, timeline_end, brief_summary, key_messages, hashtags, cta } = body
 
-    const serverClient = await createSupabaseServerClient()
-    const { data: { user } } = await serverClient.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!name) return NextResponse.json({ error: 'Campaign name required' }, { status: 400 })
 
-    const supabase = createSupabaseServiceClient()
+    const campaignId = crypto.randomUUID()
 
-    // Fetch campaign
-    const { data: campaign } = await supabase.from('campaigns').select('*').eq('id', campaignId).single()
-    if (!campaign) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
-
-    // Fetch brand
-    const { data: brand } = await supabase.from('brands').select('*').eq('id', campaign.brand_id).single()
-
-    // 1. Search creators
-    const filters = {
-      platform: campaign.platforms || undefined,
-      limit: 20,
-    }
-    const creators = await searchCreators(filters)
-
-    // 2. Score creators
-    let scoredCreators: Array<typeof creators[0] & { score: { overall: number; [k: string]: unknown } }> = []
-    
-    try {
-      const claudeScores = await scoreCampaignCreators(
-        campaign as unknown as Record<string, unknown>,
-        creators.map(c => ({
-          id: c.id,
-          handle: c.handle,
-          platform: c.platform,
-          follower_count: c.follower_count,
-          engagement_rate: c.engagement_rate,
-          categories: c.categories,
-          past_brand_deals: c.past_brand_deals,
-          brand_safety_score: c.brand_safety_score,
-          audience_demographics: c.audience_demographics,
-          bio: c.bio,
-        }))
-      )
-      
-      scoredCreators = creators.map(creator => {
-        const claudeScore = claudeScores.find(s => String(s.creator_id) === String(creator.id))
-        const fallbackScore = sortCreatorsByScore([creator], campaign as unknown as Campaign)[0].score
-        return {
-          ...creator,
-          score: {
-            ...fallbackScore,
-            ...(claudeScore?.score_breakdown as Record<string, unknown> || {}),
-            overall: Math.round(Number(claudeScore?.fit_score || fallbackScore.overall)),
-          }
-        }
-      })
-    } catch {
-      // Fallback to pure scoring
-      scoredCreators = sortCreatorsByScore(creators, campaign as unknown as Campaign).map(c => ({
-        ...c,
-        score: { ...c.score, overall: c.score.overall }
-      }))
+    // 1. Filter mock creators by platform
+    let creators = [...mockCreators]
+    if (platforms?.length) {
+      const platformLower = platforms.map((p: string) => p.toLowerCase())
+      const filtered = creators.filter(c => platformLower.some((p: string) => c.platform.toLowerCase().includes(p)))
+      if (filtered.length > 0) creators = filtered
     }
 
-    scoredCreators.sort((a, b) => b.score.overall - a.score.overall)
-    const top10 = scoredCreators.slice(0, 10)
+    // 2. Score creators using fallback scoring
+    const campaign = { name, objective, budget_total, platforms, content_types, brief_summary, key_messages, hashtags, cta }
+    const scored = sortCreatorsByScore(creators.slice(0, 30), campaign as any)
+    scored.sort((a, b) => (b.score?.overall || 0) - (a.score?.overall || 0))
+    const top10 = scored.slice(0, 10)
 
-    // 3. Generate campaign brief
+    // 3. Try Claude for enhanced scoring + brief
     let aiBrief: Record<string, unknown> = {}
     try {
-      aiBrief = await generateCampaignBrief(
-        brand as unknown as Record<string, unknown> || {},
-        campaign as unknown as Record<string, unknown>,
-        top10 as unknown as Record<string, unknown>[]
-      )
-    } catch {
-      aiBrief = {
-        strategy: `Focus on authentic creator partnerships across ${(campaign.platforms || []).join(', ')} to drive ${campaign.objective || 'brand awareness'}.`,
-        bundle: `Mix of micro-influencers (50K-200K) and macro-influencers (200K+) for optimal reach and engagement.`,
-        estimated_reach: top10.reduce((sum, c) => sum + c.follower_count, 0),
-        estimated_roi: '2.5:1',
-      }
-    }
-
-    // 4. Upsert creators and create campaign_creators
-    const creatorInserts = []
-    const campaignCreatorInserts = []
-
-    for (const creator of top10) {
-      // Upsert creator
-      const { data: existingCreator } = await supabase
-        .from('creators')
-        .select('id')
-        .eq('id', creator.id)
-        .single()
-
-      let creatorId = creator.id
-      if (!existingCreator) {
-        const { data: inserted } = await supabase
-          .from('creators')
-          .upsert({
-            id: creator.id,
-            external_id: creator.external_id || creator.id,
-            handle: creator.handle,
-            full_name: creator.full_name,
-            platform: creator.platform,
-            profile_url: creator.profile_url,
-            avatar_url: creator.avatar_url,
-            bio: creator.bio,
-            follower_count: creator.follower_count,
-            engagement_rate: creator.engagement_rate,
-            avg_likes: creator.avg_likes,
-            avg_comments: creator.avg_comments,
-            avg_views: creator.avg_views,
-            audience_demographics: creator.audience_demographics,
-            categories: creator.categories,
-            past_brand_deals: creator.past_brand_deals,
-            estimated_cpm: creator.estimated_cpm,
-            estimated_rate_per_post: creator.estimated_rate_per_post,
-            contact_email: creator.contact_email,
-            location: creator.location,
-            brand_safety_score: creator.brand_safety_score,
-            fake_follower_percentage: creator.fake_follower_percentage,
-          }, { onConflict: 'id' })
-          .select('id')
-          .single()
-        if (inserted) creatorId = inserted.id
-      }
-
-      campaignCreatorInserts.push({
-        campaign_id: campaignId,
-        creator_id: creatorId,
-        fit_score: creator.score.overall,
-        score_breakdown: creator.score,
-        status: 'shortlisted',
-        proposed_rate: creator.estimated_rate_per_post,
-      })
-    }
-
-    // Insert campaign creators
-    if (campaignCreatorInserts.length > 0) {
-      await supabase.from('campaign_creators').insert(campaignCreatorInserts)
-    }
-
-    // 5. Generate outreach emails for top 3
-    const { data: insertedCCs } = await supabase
-      .from('campaign_creators')
-      .select('id, creator_id')
-      .eq('campaign_id', campaignId)
-      .order('fit_score', { ascending: false })
-      .limit(3)
-
-    if (insertedCCs) {
-      for (const cc of insertedCCs) {
-        const creator = top10.find(c => c.id === cc.creator_id)
-        if (!creator) continue
-        
-        try {
-          const email = await generateOutreachEmail(
-            brand as unknown as Record<string, unknown> || { name: 'Brand' },
-            campaign as unknown as Record<string, unknown>,
-            creator as unknown as Record<string, unknown>
-          )
-          
-          await supabase.from('campaign_creators').update({
-            outreach_email_subject: email.subject,
-            outreach_email_body: email.body,
-          }).eq('id', cc.id)
-        } catch {
-          // Skip outreach generation on error
+      const { scoreCampaignCreators, generateCampaignBrief, generateOutreachEmail } = await import('@/lib/anthropic')
+      
+      // Score with Claude
+      try {
+        const claudeScores = await scoreCampaignCreators(
+          campaign as any,
+          top10.map(c => ({
+            id: c.id, handle: c.handle, platform: c.platform,
+            follower_count: c.follower_count, engagement_rate: c.engagement_rate,
+            categories: c.categories, bio: c.bio, brand_safety_score: c.brand_safety_score,
+            audience_demographics: c.audience_demographics, past_brand_deals: c.past_brand_deals,
+          }))
+        )
+        // Merge Claude scores
+        for (const creator of top10) {
+          const cs = claudeScores.find((s: any) => String(s.creator_id) === String(creator.id))
+          if (cs) {
+            (creator as any).score = {
+              ...(creator as any).score,
+              ...(cs.score_breakdown || {}),
+              overall: Math.round(Number(cs.fit_score || (creator as any).score?.overall || 70)),
+              recommendation: cs.recommendation_reason || '',
+              red_flags: cs.red_flags || [],
+            }
+          }
         }
+      } catch (e) { console.log('Claude scoring fallback:', (e as Error).message) }
+
+      // Generate brief with Claude
+      try {
+        aiBrief = await generateCampaignBrief({}, campaign as any, top10 as any)
+      } catch (e) { console.log('Claude brief fallback:', (e as Error).message) }
+
+      // Generate outreach for top 3
+      for (const creator of top10.slice(0, 3)) {
+        try {
+          const email = await generateOutreachEmail({ name: 'Brand' }, campaign as any, creator as any)
+          ;(creator as any).outreach = email
+        } catch { /* skip */ }
+      }
+    } catch (e) {
+      console.log('Anthropic not available, using fallback:', (e as Error).message)
+    }
+
+    // Fallback brief if Claude didn't work
+    if (!aiBrief.campaign_strategy) {
+      const totalReach = top10.reduce((sum, c) => sum + (c.follower_count || 0), 0)
+      aiBrief = {
+        campaign_strategy: `Leverage ${top10.length} creators across ${(platforms || ['Instagram']).join(', ')} to drive ${objective || 'brand awareness'} through authentic content partnerships.`,
+        recommended_bundle: {
+          description: `${top10.filter(c => (c.follower_count || 0) > 100000).length} macro + ${top10.filter(c => (c.follower_count || 0) <= 100000).length} micro creators for optimal reach and engagement`,
+          total_estimated_reach: totalReach,
+          estimated_cpm: budget_total ? Math.round((budget_total / totalReach) * 1000 * 100) / 100 : 5,
+          estimated_total_cost: budget_total || 10000,
+        },
+        content_brief: {
+          hook_suggestions: ['Start with a personal story', 'Show the before/after', 'Ask a controversial question'],
+          talking_points: key_messages || ['Product benefits', 'Personal experience', 'Call to action'],
+          visual_direction: 'Bright, authentic, lifestyle-focused content',
+          posting_window: 'Tuesday-Thursday, 10am-2pm local time',
+        },
+        budget_breakdown: {
+          creator_fees: Math.round((budget_total || 10000) * 0.7),
+          production: Math.round((budget_total || 10000) * 0.15),
+          platform_boost: Math.round((budget_total || 10000) * 0.15),
+        },
       }
     }
 
-    // 6. Update campaign with AI brief
-    await supabase.from('campaigns').update({
-      ai_generated_brief: aiBrief,
-      key_messages: (aiBrief.key_messages as string[]) || campaign.key_messages,
-      dos: (aiBrief.dos as string[]) || null,
-      donts: (aiBrief.donts as string[]) || null,
+    // Save campaign in memory
+    const fullCampaign = {
+      id: campaignId,
+      ...campaign,
+      budget_total,
+      timeline_start,
+      timeline_end,
       status: 'active',
-    }).eq('id', campaignId)
+      ai_generated_brief: aiBrief,
+      creators: top10.map(c => ({
+        id: c.id,
+        handle: c.handle,
+        full_name: c.full_name,
+        platform: c.platform,
+        avatar_url: c.avatar_url,
+        follower_count: c.follower_count,
+        engagement_rate: c.engagement_rate,
+        categories: c.categories,
+        location: c.location,
+        bio: c.bio,
+        score: (c as any).score || { overall: 70 },
+        outreach: (c as any).outreach || null,
+        status: 'shortlisted',
+        estimated_rate: c.estimated_rate_per_post,
+      })),
+      created_at: new Date().toISOString(),
+    }
 
-    return NextResponse.json({ success: true, campaignId })
+    campaigns.set(campaignId, fullCampaign)
+
+    return NextResponse.json({
+      success: true,
+      campaign_id: campaignId,
+      campaign: fullCampaign,
+    })
   } catch (err: unknown) {
     console.error('Campaign generation error:', err)
     return NextResponse.json({ error: (err as Error).message || 'Generation failed' }, { status: 500 })

@@ -1,17 +1,3 @@
-const LogoIcon = () => (
-  <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: 44, height: 44 }}>
-    <circle cx="6" cy="6" r="3" fill="currentColor"/>
-    <circle cx="18" cy="6" r="3" fill="currentColor"/>
-    <circle cx="30" cy="6" r="3" fill="currentColor"/>
-    <circle cx="6" cy="18" r="3" fill="currentColor"/>
-    <circle cx="18" cy="18" r="3" fill="currentColor"/>
-    <circle cx="30" cy="18" r="3" fill="currentColor"/>
-    <circle cx="6" cy="30" r="3" fill="currentColor"/>
-    <circle cx="18" cy="30" r="3" fill="currentColor"/>
-    <circle cx="30" cy="30" r="3" fill="currentColor"/>
-  </svg>
-)
-
 export default function LoginPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: '#F6F7F9' }}>
@@ -32,8 +18,8 @@ export default function LoginPage() {
         <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'rgba(82,64,204,0.2)', pointerEvents: 'none' }} />
 
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#FF7B3E', zIndex: 1 }}>
-          <LogoIcon />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, zIndex: 1 }}>
+          <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 40 }} />
           <div>
             <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.2rem', lineHeight: 1.1 }}>LaunchPad</div>
             <div style={{ color: '#8E82E2', fontSize: '0.65rem', letterSpacing: '0.1em', lineHeight: 1.1 }}>BY CREATORDB</div>
@@ -63,8 +49,8 @@ export default function LoginPage() {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
           {/* Mobile logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '2rem', color: '#FF6117' }} className="md:hidden">
-            <LogoIcon />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '2rem' }} className="md:hidden">
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 36 }} />
             <div>
               <div style={{ color: '#1C1549', fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.1 }}>LaunchPad</div>
               <div style={{ color: '#7B7B84', fontSize: '0.6rem', letterSpacing: '0.08em' }}>BY CREATORDB</div>
@@ -75,6 +61,9 @@ export default function LoginPage() {
           <p style={{ color: '#7B7B84', marginBottom: '2rem', fontSize: '0.95rem' }}>Sign in to your LaunchPad account</p>
 
           <div style={{ background: '#fff', border: '1px solid #DADADE', borderRadius: 16, padding: '2rem', boxShadow: '0 2px 16px rgba(28,21,73,0.06)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+              <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 40 }} />
+            </div>
             <form method="POST" action="/api/auth/login">
               <div style={{ marginBottom: '1.25rem' }}>
                 <label htmlFor="email" style={{ display: 'block', color: '#1F1F21', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Email address</label>

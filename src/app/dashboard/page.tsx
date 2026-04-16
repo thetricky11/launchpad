@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers'
 import { parseSessionToken } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { Nav } from '@/components/nav'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -19,7 +18,24 @@ export default async function DashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F6F7F9' }}>
-      <Nav user={user} />
+      <nav style={{ background: '#1C1549', borderBottom: '1px solid #261D64', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1.5rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 32 }} />
+            <div>
+              <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.05rem', lineHeight: 1.1 }}>LaunchPad</div>
+              <div style={{ color: '#BBB4EC', fontSize: '0.6rem', letterSpacing: '0.08em', lineHeight: 1.1 }}>BY CREATORDB</div>
+            </div>
+          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <a href="/dashboard" style={{ color: '#FF7B3E', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>Dashboard</a>
+            <a href="/campaigns" style={{ color: '#D2CDF3', textDecoration: 'none', fontSize: '0.875rem' }}>Campaigns</a>
+            <form method="POST" action="/api/auth/logout" style={{ margin: 0 }}>
+              <button type="submit" style={{ background: 'rgba(255,97,23,0.15)', border: '1px solid rgba(255,97,23,0.3)', color: '#FF7B3E', padding: '0.4rem 1rem', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Sign out</button>
+            </form>
+          </div>
+        </div>
+      </nav>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2.5rem 1.5rem' }}>
         {/* Header */}

@@ -1,19 +1,5 @@
 import Link from 'next/link'
 
-const LogoIcon = () => (
-  <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: 40, height: 40 }}>
-    <circle cx="6" cy="6" r="3" fill="currentColor"/>
-    <circle cx="18" cy="6" r="3" fill="currentColor"/>
-    <circle cx="30" cy="6" r="3" fill="currentColor"/>
-    <circle cx="6" cy="18" r="3" fill="currentColor"/>
-    <circle cx="18" cy="18" r="3" fill="currentColor"/>
-    <circle cx="30" cy="18" r="3" fill="currentColor"/>
-    <circle cx="6" cy="30" r="3" fill="currentColor"/>
-    <circle cx="18" cy="30" r="3" fill="currentColor"/>
-    <circle cx="30" cy="30" r="3" fill="currentColor"/>
-  </svg>
-)
-
 const features = [
   {
     icon: '🔍',
@@ -60,8 +46,8 @@ export default function HomePage() {
       {/* Top nav */}
       <header style={{ background: '#1C1549', borderBottom: '1px solid #261D64' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1.5rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#FF7B3E' }}>
-            <LogoIcon />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 32 }} />
             <div>
               <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.05rem', lineHeight: 1.1 }}>LaunchPad</div>
               <div style={{ color: '#BBB4EC', fontSize: '0.6rem', letterSpacing: '0.08em', lineHeight: 1.1 }}>BY CREATORDB</div>
@@ -86,8 +72,8 @@ export default function HomePage() {
           </div>
 
           {/* Logo mark */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', color: '#FF7B3E' }}>
-            <LogoIcon />
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 48 }} />
           </div>
 
           <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 800, color: '#fff', lineHeight: 1.1, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
@@ -96,8 +82,11 @@ export default function HomePage() {
           <div style={{ color: '#BBB4EC', fontSize: '0.9rem', letterSpacing: '0.12em', fontWeight: 500, marginBottom: '1.5rem' }}>
             BY CREATORDB
           </div>
-          <p style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)', color: '#D2CDF3', marginBottom: '3rem', lineHeight: 1.6, maxWidth: 620, margin: '0 auto 3rem' }}>
+          <p style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)', color: '#D2CDF3', marginBottom: '1rem', lineHeight: 1.6, maxWidth: 620, margin: '0 auto 1rem' }}>
             AI-powered influencer marketing campaigns in seconds
+          </p>
+          <p style={{ color: '#8E82E2', fontSize: '0.85rem', letterSpacing: '0.06em', marginBottom: '3rem' }}>
+            Powered by CreatorDB API V.3
           </p>
 
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -167,8 +156,8 @@ export default function HomePage() {
       {/* Footer */}
       <footer style={{ background: '#1F1F21', padding: '2.5rem 1.5rem' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#FF7B3E' }}>
-            <LogoIcon />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 28 }} />
             <div>
               <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.1 }}>LaunchPad</div>
               <div style={{ color: '#626269', fontSize: '0.6rem', letterSpacing: '0.08em' }}>BY CREATORDB</div>

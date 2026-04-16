@@ -4,20 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 
-const LogoIcon = () => (
-  <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" aria-hidden>
-    <circle cx="6" cy="6" r="3" fill="currentColor"/>
-    <circle cx="18" cy="6" r="3" fill="currentColor"/>
-    <circle cx="30" cy="6" r="3" fill="currentColor"/>
-    <circle cx="6" cy="18" r="3" fill="currentColor"/>
-    <circle cx="18" cy="18" r="3" fill="currentColor"/>
-    <circle cx="30" cy="18" r="3" fill="currentColor"/>
-    <circle cx="6" cy="30" r="3" fill="currentColor"/>
-    <circle cx="18" cy="30" r="3" fill="currentColor"/>
-    <circle cx="30" cy="30" r="3" fill="currentColor"/>
-  </svg>
-)
-
 interface NavProps {
   user?: { email: string; name: string } | null
 }
@@ -52,9 +38,7 @@ export function Nav({ user }: NavProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2.5 group" style={{ textDecoration: 'none' }}>
-            <div style={{ color: '#FF7B3E' }}>
-              <LogoIcon />
-            </div>
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 32 }} />
             <div className="leading-tight">
               <div style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.01em', lineHeight: 1.1 }}>
                 LaunchPad

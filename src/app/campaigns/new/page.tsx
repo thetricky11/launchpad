@@ -1,6 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
+import { Nav } from '@/components/nav'
+
+const BudgetChart = dynamic(() => import('recharts').then(mod => {
+  const { PieChart, Pie, Cell, ResponsiveContainer } = mod
+  return { default: ({ data }: { data: { name: string; value: number; color: string }[] }) => (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie data={data} cx="50%" cy="50%" innerRadius={38} outerRadius={58} dataKey="value">
+          {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+        </Pie>
+      </PieChart>
+    </ResponsiveContainer>
+  )}
+}), { ssr: false, loading: () => <div style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9C9CA3' }}>Loading chart...</div> })
 
 const PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'Twitter/X', 'LinkedIn']
 const CONTENT_TYPES = ['Reels/Short Video', 'Stories', 'Static Post', 'YouTube Video', 'Blog Post']
@@ -60,10 +75,16 @@ export default function NewCampaignPage() {
     }
   }
 
+  const budgetNum = parseFloat(budget) || 10000
+  const chartData = [
+    { name: 'Creators', value: Math.round(budgetNum * 0.60), color: '#FF6117' },
+    { name: 'Content', value: Math.round(budgetNum * 0.25), color: '#35288A' },
+    { name: 'Promotion', value: Math.round(budgetNum * 0.15), color: '#2AE5B0' },
+  ]
+
   const S = {
     page: { minHeight: '100vh', background: '#F6F7F9', fontFamily: 'Inter, sans-serif' } as React.CSSProperties,
-    nav: { background: '#1C1549', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } as React.CSSProperties,
-    main: { maxWidth: 900, margin: '0 auto', padding: '2rem 1.5rem' } as React.CSSProperties,
+    main: { maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'start' } as React.CSSProperties,
     section: { background: '#fff', border: '1px solid #DADADE', borderRadius: 16, padding: '1.75rem', marginBottom: '1.5rem' } as React.CSSProperties,
     label: { display: 'block', fontWeight: 600, fontSize: '0.875rem', color: '#1F1F21', marginBottom: 6 } as React.CSSProperties,
     input: { width: '100%', padding: '0.75rem', border: '1.5px solid #DADADE', borderRadius: 8, fontSize: '0.95rem', color: '#1F1F21', background: '#F6F7F9', boxSizing: 'border-box' as const, outline: 'none' } as React.CSSProperties,
@@ -73,122 +94,169 @@ export default function NewCampaignPage() {
 
   return (
     <div style={S.page}>
-      <nav style={S.nav}>
-        <a href="/dashboard" style={{ color: '#fff', textDecoration: 'none', fontWeight: 800, fontSize: '1.1rem' }}>🚀 LaunchPad</a>
-        <a href="/dashboard" style={{ color: '#FF7B3E', textDecoration: 'none', fontSize: '0.875rem' }}>← Back to dashboard</a>
-      </nav>
+      <Nav />
 
-      <main style={S.main}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '1.5rem 1.5rem 0.5rem' }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1C1549', marginBottom: 4 }}>New campaign</h1>
-        <p style={{ color: '#7B7B84', marginBottom: '2rem' }}>Fill in the details and let AI do the heavy lifting</p>
+        <p style={{ color: '#7B7B84', marginBottom: 0 }}>Fill in the details and let AI do the heavy lifting</p>
+      </div>
 
-        {/* Campaign basics */}
-        <div style={S.section}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Campaign basics</h2>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={S.label}>Campaign name *</label>
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Summer Beauty Launch 2024" style={S.input} />
+      <div style={S.main}>
+        {/* Left: form */}
+        <div>
+          {/* Campaign basics */}
+          <div style={S.section}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Campaign basics</h2>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={S.label}>Campaign name *</label>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="Summer Beauty Launch 2024" style={S.input} />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={S.label}>Campaign objective</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                {OBJECTIVES.map(obj => (
+                  <button type="button" key={obj} onClick={() => setObjective(objective === obj ? '' : obj)} style={objective === obj ? S.btnOn : S.btnOff}>
+                    {obj}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={S.label}>Total budget ($)</label>
+                <input value={budget} onChange={e => setBudget(e.target.value)} type="number" placeholder="10000" style={S.input} />
+              </div>
+              <div>
+                <label style={S.label}>Timeline</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input value={startDate} onChange={e => setStartDate(e.target.value)} type="date" style={{ ...S.input, flex: 1 }} />
+                  <input value={endDate} onChange={e => setEndDate(e.target.value)} type="date" style={{ ...S.input, flex: 1 }} />
+                </div>
+              </div>
+            </div>
           </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={S.label}>Campaign objective</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-              {OBJECTIVES.map(obj => (
-                <button type="button" key={obj} onClick={() => setObjective(objective === obj ? '' : obj)} style={objective === obj ? S.btnOn : S.btnOff}>
-                  {obj}
-                </button>
+
+          {/* Platforms */}
+          <div style={S.section}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Platforms & content</h2>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={S.label}>Platforms</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {PLATFORMS.map(p => (
+                  <button type="button" key={p} onClick={() => toggle(platforms, p, setPlatforms)} style={platforms.includes(p) ? S.btnOn : S.btnOff}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={S.label}>Content types</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {CONTENT_TYPES.map(ct => (
+                  <button type="button" key={ct} onClick={() => toggle(contentTypes, ct, setContentTypes)} style={contentTypes.includes(ct) ? S.btnOn : S.btnOff}>
+                    {ct}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Brief */}
+          <div style={S.section}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Campaign brief</h2>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={S.label}>Brief summary</label>
+              <textarea value={briefSummary} onChange={e => setBriefSummary(e.target.value)} rows={4}
+                placeholder="Describe your campaign goals, product, and what you want creators to convey..."
+                style={{ ...S.input, resize: 'vertical' as const, minHeight: 100 }} />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={S.label}>Key messages (one per line)</label>
+              <textarea value={keyMessages} onChange={e => setKeyMessages(e.target.value)} rows={3}
+                placeholder="Our product solves X&#10;Key benefit: Y" style={{ ...S.input, resize: 'vertical' as const, minHeight: 80 }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={S.label}>Hashtags</label>
+                <input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="#brand, #campaign" style={S.input} />
+              </div>
+              <div>
+                <label style={S.label}>Call to action</label>
+                <input value={cta} onChange={e => setCta(e.target.value)} placeholder="Shop now at link in bio" style={S.input} />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading || !name}
+            style={{
+              width: '100%', padding: '1rem',
+              background: loading || !name ? '#FFD7C5' : '#FF6117',
+              color: '#fff', border: 'none', borderRadius: 12,
+              fontSize: '1.05rem', fontWeight: 700,
+              cursor: loading || !name ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 20px rgba(255,97,23,0.35)',
+            }}
+          >
+            {loading ? '⏳ Generating campaign… (this may take 30 seconds)' : '🚀 Generate My Campaign →'}
+          </button>
+
+          {result && (
+            <div style={{ ...S.section, marginTop: '1.5rem' }}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '0.5rem' }}>Result</h2>
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', maxHeight: 400, overflow: 'auto' }}>{result}</pre>
+            </div>
+          )}
+        </div>
+
+        {/* Right: sidebar preview */}
+        <div style={{ position: 'sticky', top: 80 }}>
+          {/* Budget breakdown */}
+          <div style={{ background: '#fff', border: '1px solid #DADADE', borderRadius: 16, padding: '1.5rem', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1C1549', marginBottom: '1rem' }}>Budget breakdown</h3>
+            <div style={{ height: 140 }}>
+              <BudgetChart data={chartData} />
+            </div>
+            <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {chartData.map(d => (
+                <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: d.color }} />
+                    <span style={{ color: '#505057' }}>{d.name}</span>
+                  </div>
+                  <span style={{ fontWeight: 600, color: '#1F1F21' }}>${d.value.toLocaleString()}</span>
+                </div>
               ))}
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={S.label}>Total budget ($)</label>
-              <input value={budget} onChange={e => setBudget(e.target.value)} type="number" placeholder="10000" style={S.input} />
-            </div>
-            <div>
-              <label style={S.label}>Timeline</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={startDate} onChange={e => setStartDate(e.target.value)} type="date" style={{ ...S.input, flex: 1 }} />
-                <input value={endDate} onChange={e => setEndDate(e.target.value)} type="date" style={{ ...S.input, flex: 1 }} />
+
+          {/* Campaign summary */}
+          <div style={{ background: 'linear-gradient(135deg, #1C1549, #35288A)', border: '1px solid #261D64', borderRadius: 16, padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#fff', marginBottom: '1rem' }}>Campaign preview</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div>
+                <div style={{ color: '#8E82E2', fontSize: '0.7rem', letterSpacing: '0.06em', marginBottom: 2 }}>NAME</div>
+                <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 600 }}>{name || '—'}</div>
+              </div>
+              <div>
+                <div style={{ color: '#8E82E2', fontSize: '0.7rem', letterSpacing: '0.06em', marginBottom: 2 }}>OBJECTIVE</div>
+                <div style={{ color: '#FFD7C5', fontSize: '0.85rem' }}>{objective || '—'}</div>
+              </div>
+              <div>
+                <div style={{ color: '#8E82E2', fontSize: '0.7rem', letterSpacing: '0.06em', marginBottom: 2 }}>BUDGET</div>
+                <div style={{ color: '#2AE5B0', fontSize: '0.85rem', fontWeight: 600 }}>${budgetNum.toLocaleString()}</div>
+              </div>
+              <div>
+                <div style={{ color: '#8E82E2', fontSize: '0.7rem', letterSpacing: '0.06em', marginBottom: 2 }}>PLATFORMS</div>
+                <div style={{ color: '#D2CDF3', fontSize: '0.8rem' }}>{platforms.length ? platforms.join(', ') : '—'}</div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Platforms */}
-        <div style={S.section}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Platforms & content</h2>
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label style={S.label}>Platforms</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {PLATFORMS.map(p => (
-                <button type="button" key={p} onClick={() => toggle(platforms, p, setPlatforms)} style={platforms.includes(p) ? S.btnOn : S.btnOff}>
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label style={S.label}>Content types</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {CONTENT_TYPES.map(ct => (
-                <button type="button" key={ct} onClick={() => toggle(contentTypes, ct, setContentTypes)} style={contentTypes.includes(ct) ? S.btnOn : S.btnOff}>
-                  {ct}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Brief */}
-        <div style={S.section}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Campaign brief</h2>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={S.label}>Brief summary</label>
-            <textarea value={briefSummary} onChange={e => setBriefSummary(e.target.value)} rows={4}
-              placeholder="Describe your campaign goals, product, and what you want creators to convey..."
-              style={{ ...S.input, resize: 'vertical' as const, minHeight: 100 }} />
-          </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={S.label}>Key messages (one per line)</label>
-            <textarea value={keyMessages} onChange={e => setKeyMessages(e.target.value)} rows={3}
-              placeholder="Our product solves X&#10;Key benefit: Y" style={{ ...S.input, resize: 'vertical' as const, minHeight: 80 }} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={S.label}>Hashtags</label>
-              <input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="#brand, #campaign" style={S.input} />
-            </div>
-            <div>
-              <label style={S.label}>Call to action</label>
-              <input value={cta} onChange={e => setCta(e.target.value)} placeholder="Shop now at link in bio" style={S.input} />
-            </div>
-          </div>
-        </div>
-
-        {/* Submit */}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading || !name}
-          style={{
-            width: '100%', padding: '1rem',
-            background: loading || !name ? '#FFD7C5' : '#FF6117',
-            color: '#fff', border: 'none', borderRadius: 12,
-            fontSize: '1.05rem', fontWeight: 700,
-            cursor: loading || !name ? 'not-allowed' : 'pointer',
-            boxShadow: '0 4px 20px rgba(255,97,23,0.35)',
-          }}
-        >
-          {loading ? '⏳ Generating campaign… (this may take 30 seconds)' : '🚀 Generate My Campaign →'}
-        </button>
-
-        {result && (
-          <div style={{ ...S.section, marginTop: '1.5rem' }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '0.5rem' }}>Result</h2>
-            <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', maxHeight: 400, overflow: 'auto' }}>{result}</pre>
-          </div>
-        )}
-      </main>
+      </div>
     </div>
   )
 }

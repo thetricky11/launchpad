@@ -19,7 +19,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, zIndex: 1 }}>
-          <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 40 }} />
+          <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 56, borderRadius: 10 }} />
           <div>
             <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.2rem', lineHeight: 1.1 }}>LaunchPad</div>
             <div style={{ color: '#8E82E2', fontSize: '0.65rem', letterSpacing: '0.1em', lineHeight: 1.1 }}>BY CREATORDB</div>
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
           <div style={{ background: '#fff', border: '1px solid #DADADE', borderRadius: 16, padding: '2rem', boxShadow: '0 2px 16px rgba(28,21,73,0.06)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-              <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 40 }} />
+              <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 56, borderRadius: 10 }} />
             </div>
             <form method="POST" action="/api/auth/login">
               <div style={{ marginBottom: '1.25rem' }}>

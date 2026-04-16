@@ -9,7 +9,7 @@ const features = [
   {
     icon: '🤖',
     title: 'AI fit scoring',
-    desc: 'Every creator is scored against your brand brief using GPT-4. Know who will perform before you spend.',
+    desc: 'Every creator is scored against your brand brief using AI. Know who will perform before you spend.',
   },
   {
     icon: '✉️',
@@ -68,12 +68,12 @@ export default function HomePage() {
           {/* Badge */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,123,62,0.15)', border: '1px solid rgba(255,123,62,0.35)', borderRadius: 100, padding: '0.35rem 1rem', marginBottom: '2rem' }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF7B3E', display: 'inline-block' }} />
-            <span style={{ color: '#FFD7C5', fontSize: '0.8rem', fontWeight: 500 }}>Powered by GPT-4 + CreatorDB</span>
+            <span style={{ color: '#FFD7C5', fontSize: '0.8rem', fontWeight: 500 }}>Powered by CreatorDB API V.3</span>
           </div>
 
           {/* Logo mark */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 48 }} />
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 72, borderRadius: 10 }} />
           </div>
 
           <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 800, color: '#fff', lineHeight: 1.1, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
@@ -157,7 +157,7 @@ export default function HomePage() {
       <footer style={{ background: '#1F1F21', padding: '2.5rem 1.5rem' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 28 }} />
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 44, borderRadius: 8 }} />
             <div>
               <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.1 }}>LaunchPad</div>
               <div style={{ color: '#626269', fontSize: '0.6rem', letterSpacing: '0.08em' }}>BY CREATORDB</div>

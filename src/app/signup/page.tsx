@@ -60,7 +60,7 @@ export default function SignupPage() {
         <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'rgba(82,64,204,0.2)', pointerEvents: 'none' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#FF7B3E', zIndex: 1 }}>
-          <LogoIcon />
+          <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 56, borderRadius: 10 }} />
           <div>
             <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.2rem', lineHeight: 1.1 }}>LaunchPad</div>
             <div style={{ color: '#8E82E2', fontSize: '0.65rem', letterSpacing: '0.1em', lineHeight: 1.1 }}>BY CREATORDB</div>
@@ -89,7 +89,7 @@ export default function SignupPage() {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '2rem', color: '#FF6117' }} className="md:hidden">
-            <LogoIcon />
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 56, borderRadius: 10 }} />
             <div>
               <div style={{ color: '#1C1549', fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.1 }}>LaunchPad</div>
               <div style={{ color: '#7B7B84', fontSize: '0.6rem', letterSpacing: '0.08em' }}>BY CREATORDB</div>

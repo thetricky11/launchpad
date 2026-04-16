@@ -21,7 +21,7 @@ export default async function DashboardPage() {
       <nav style={{ background: '#1C1549', borderBottom: '1px solid #261D64', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1.5rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 32 }} />
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 44, borderRadius: 8 }} />
             <div>
               <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.05rem', lineHeight: 1.1 }}>LaunchPad</div>
               <div style={{ color: '#BBB4EC', fontSize: '0.6rem', letterSpacing: '0.08em', lineHeight: 1.1 }}>BY CREATORDB</div>

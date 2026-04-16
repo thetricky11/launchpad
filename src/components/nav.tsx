@@ -38,7 +38,7 @@ export function Nav({ user }: NavProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2.5 group" style={{ textDecoration: 'none' }}>
-            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 32 }} />
+            <img src="/brand-logo.avif" alt="LaunchPad" style={{ height: 44, borderRadius: 8 }} />
             <div className="leading-tight">
               <div style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.01em', lineHeight: 1.1 }}>
                 LaunchPad

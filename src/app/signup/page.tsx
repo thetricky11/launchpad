@@ -20,12 +20,22 @@ export default function SignupPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
-        email, password,
-        options: { emailRedirectTo: `${window.location.origin}/onboarding` }
+      // Create user via service role API (auto-confirms email)
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
-      if (error) throw error
-      toast.success('Account created! Check your email to confirm.')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Signup failed')
+
+      // Now sign in with the newly created account
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email, password,
+      })
+      if (signInError) throw signInError
+
+      toast.success('Account created! Let\'s set up your brand.')
       router.push('/onboarding')
     } catch (err: unknown) {
       toast.error((err as Error).message || 'Signup failed')

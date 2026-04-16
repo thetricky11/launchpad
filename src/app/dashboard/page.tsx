@@ -1,38 +1,25 @@
-'use client'
+import { cookies } from 'next/headers'
+import { parseSessionToken } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-import Link from 'next/link'
-import { useAuth } from '@/lib/useAuth'
-
-export default function DashboardPage() {
-  const { user, loading } = useAuth('/login')
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#a1a1aa', fontSize: '1.125rem' }}>Loading...</div>
-      </div>
-    )
-  }
-
-  if (!user) return null
+export default async function DashboardPage() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('launchpad_session')?.value
+  const user = token ? parseSessionToken(token) : null
+  
+  if (!user) redirect('/login')
 
   return (
     <div style={{ minHeight: '100vh', background: '#09090b', color: 'white' }}>
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid #27272a', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link href="/dashboard" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', textDecoration: 'none' }}>🚀 LaunchPad</Link>
+        <a href="/dashboard" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', textDecoration: 'none' }}>🚀 LaunchPad</a>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <Link href="/campaigns/new" style={{ background: '#4f46e5', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.875rem', fontWeight: '600' }}>
+          <a href="/campaigns/new" style={{ background: '#4f46e5', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.875rem', fontWeight: '600' }}>
             + New Campaign
-          </Link>
-          <Link href="/billing" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '0.875rem' }}>Billing</Link>
+          </a>
+          <a href="/billing" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '0.875rem' }}>Billing</a>
           <span style={{ color: '#71717a', fontSize: '0.875rem' }}>{user.email}</span>
-          <button
-            onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/login' }}
-            style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
-          >
-            Logout
-          </button>
         </div>
       </nav>
 
@@ -64,9 +51,9 @@ export default function DashboardPage() {
           <p style={{ color: '#a1a1aa', marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
             Use AI to generate a complete influencer marketing campaign in seconds.
           </p>
-          <Link href="/campaigns/new" style={{ display: 'inline-block', background: '#4f46e5', color: 'white', padding: '0.75rem 2rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '600' }}>
+          <a href="/campaigns/new" style={{ display: 'inline-block', background: '#4f46e5', color: 'white', padding: '0.75rem 2rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '600' }}>
             + New Campaign →
-          </Link>
+          </a>
         </div>
       </div>
     </div>

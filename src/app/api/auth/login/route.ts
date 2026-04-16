@@ -22,7 +22,9 @@ export async function POST(req: NextRequest) {
   if (!user) {
     // For form posts, redirect back with error
     if (!contentType.includes('application/json')) {
-      return NextResponse.redirect(new URL('/login?error=invalid', req.url))
+      const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'localhost:3000'
+      const proto = req.headers.get('x-forwarded-proto') || 'http'
+      return NextResponse.redirect(`${proto}://${host}/login?error=invalid`)
     }
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
   }
@@ -31,7 +33,10 @@ export async function POST(req: NextRequest) {
   
   // For form posts, redirect to dashboard
   if (!contentType.includes('application/json')) {
-    const res = NextResponse.redirect(new URL('/dashboard', req.url))
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'localhost:3000'
+    const proto = req.headers.get('x-forwarded-proto') || 'http'
+    const redirectUrl = `${proto}://${host}/dashboard`
+    const res = NextResponse.redirect(redirectUrl)
     res.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
       secure: false,

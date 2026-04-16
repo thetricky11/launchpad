@@ -13,7 +13,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
   if (!campaign) redirect('/dashboard')
 
   const { data: brand } = await supabase.from('brands').select('*').eq('id', campaign.brand_id).single()
-  
+
   const { data: campaignCreators } = await supabase
     .from('campaign_creators')
     .select('*, creator:creators(*)')
@@ -26,7 +26,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
     .in('campaign_creator_id', (campaignCreators || []).map(cc => cc.id))
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div style={{ minHeight: '100vh', background: '#F6F7F9' }}>
       <Nav />
       <CampaignDetail
         campaign={campaign}

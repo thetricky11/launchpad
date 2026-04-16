@@ -3,9 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Nav } from '@/components/nav'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
@@ -14,6 +11,35 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 const PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'Twitter/X', 'LinkedIn']
 const CONTENT_TYPES = ['Reels/Short Video', 'Stories', 'Static Post', 'YouTube Video', 'TikTok', 'Blog Post', 'Live Stream']
 const OBJECTIVES = ['Brand Awareness', 'Product Launch', 'Sales & Conversions', 'App Downloads', 'Event Promotion', 'Content Library']
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.75rem 1rem',
+  border: '1.5px solid #DADADE',
+  borderRadius: 8,
+  fontSize: '0.95rem',
+  color: '#1F1F21',
+  background: '#F6F7F9',
+  boxSizing: 'border-box',
+  outline: 'none',
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontWeight: 600,
+  fontSize: '0.875rem',
+  color: '#1F1F21',
+  marginBottom: 6,
+}
+
+const sectionStyle: React.CSSProperties = {
+  background: '#fff',
+  border: '1px solid #DADADE',
+  borderRadius: 16,
+  padding: '1.75rem',
+  marginBottom: '1.5rem',
+  boxShadow: '0 2px 8px rgba(28,21,73,0.04)',
+}
 
 export default function NewCampaignPage() {
   const router = useRouter()
@@ -43,7 +69,7 @@ export default function NewCampaignPage() {
       if (brand) setBrandId(brand.id)
     }
     fetchBrand()
-  }, [])
+  }, [supabase])
 
   const toggle = (arr: string[], val: string, setter: (v: string[]) => void) => {
     setter(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
@@ -51,17 +77,15 @@ export default function NewCampaignPage() {
 
   const budgetNum = parseFloat(budget) || 0
   const budgetData = [
-    { name: 'Creators', value: budgetNum * 0.7, color: '#6366f1' },
-    { name: 'Content', value: budgetNum * 0.2, color: '#10b981' },
-    { name: 'Misc', value: budgetNum * 0.1, color: '#f59e0b' },
+    { name: 'Creators', value: budgetNum * 0.7, color: '#FF6117' },
+    { name: 'Content', value: budgetNum * 0.2, color: '#5240CC' },
+    { name: 'Misc', value: budgetNum * 0.1, color: '#2AE5B0' },
   ]
 
   const handleSubmit = async () => {
     if (!name || !brandId) { toast.error('Campaign name required'); return }
     setLoading(true)
-    
     try {
-      // Save campaign first
       const { data: campaign, error } = await supabase.from('campaigns').insert({
         brand_id: brandId,
         name,
@@ -78,9 +102,7 @@ export default function NewCampaignPage() {
         cta: cta || null,
         status: 'draft',
       }).select().single()
-
       if (error) throw error
-
       toast.success('Generating campaign...')
       router.push(`/campaigns/${campaign.id}/generating`)
     } catch (err: unknown) {
@@ -89,193 +111,184 @@ export default function NewCampaignPage() {
     }
   }
 
+  const btnActive: React.CSSProperties = { background: '#FF6117', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }
+  const btnInactive: React.CSSProperties = { background: '#F6F7F9', color: '#505057', border: '1.5px solid #DADADE', padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500 }
+
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div style={{ minHeight: '100vh', background: '#F6F7F9' }}>
       <Nav />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">New Campaign</h1>
-          <p className="text-zinc-400 mt-1">Fill in the details and let AI do the heavy lifting</p>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1C1549', marginBottom: 4 }}>New campaign</h1>
+          <p style={{ color: '#7B7B84', fontSize: '0.95rem' }}>Fill in the details and let AI do the heavy lifting</p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '2rem', alignItems: 'start' }} className="campaign-grid">
           {/* Main form */}
-          <div className="lg:col-span-2 space-y-8">
+          <div>
             {/* Campaign basics */}
-            <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-5">
-              <h2 className="text-lg font-semibold text-white">Campaign basics</h2>
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Campaign name *</Label>
-                <Input value={name} onChange={e => setName(e.target.value)}
-                  placeholder="Summer Beauty Launch 2024"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500" />
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Campaign basics</h2>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={labelStyle}>Campaign name *</label>
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="Summer Beauty Launch 2024" style={inputStyle} />
               </div>
-              <div className="space-y-3">
-                <Label className="text-zinc-300">Campaign objective</Label>
-                <div className="grid grid-cols-2 gap-2">
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={labelStyle}>Campaign objective</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {OBJECTIVES.map(obj => (
-                    <button key={obj} onClick={() => setObjective(obj)}
-                      className={`px-4 py-2 rounded-lg text-sm text-left transition-colors
-                        ${objective === obj ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
-                      {obj}
-                    </button>
+                    <button key={obj} onClick={() => setObjective(obj)} style={objective === obj ? btnActive : btnInactive}>{obj}</button>
                   ))}
                 </div>
               </div>
-            </section>
-
-            {/* Budget & timeline */}
-            <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-5">
-              <h2 className="text-lg font-semibold text-white">Budget & timeline</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Total budget ($)</Label>
-                  <Input value={budget} onChange={e => setBudget(e.target.value)} type="number"
-                    placeholder="10000" className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Total budget ($)</label>
+                  <input value={budget} onChange={e => setBudget(e.target.value)} type="number" placeholder="10000" style={inputStyle} />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Max per creator ($)</Label>
-                  <Input value={maxBudgetPerCreator} onChange={e => setMaxBudgetPerCreator(e.target.value)} type="number"
-                    placeholder="2000" className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500" />
+                <div>
+                  <label style={labelStyle}>Max per creator ($)</label>
+                  <input value={maxBudgetPerCreator} onChange={e => setMaxBudgetPerCreator(e.target.value)} type="number" placeholder="2000" style={inputStyle} />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Start date</Label>
-                  <Input value={startDate} onChange={e => setStartDate(e.target.value)} type="date"
-                    className="bg-zinc-800 border-zinc-700 text-white" />
+                <div>
+                  <label style={labelStyle}>Start date</label>
+                  <input value={startDate} onChange={e => setStartDate(e.target.value)} type="date" style={inputStyle} />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">End date</Label>
-                  <Input value={endDate} onChange={e => setEndDate(e.target.value)} type="date"
-                    className="bg-zinc-800 border-zinc-700 text-white" />
+                <div>
+                  <label style={labelStyle}>End date</label>
+                  <input value={endDate} onChange={e => setEndDate(e.target.value)} type="date" style={inputStyle} />
                 </div>
               </div>
-            </section>
+            </div>
 
             {/* Platforms & content */}
-            <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-5">
-              <h2 className="text-lg font-semibold text-white">Platforms & content</h2>
-              <div className="space-y-3">
-                <Label className="text-zinc-300">Platforms</Label>
-                <div className="flex flex-wrap gap-2">
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Platforms & content</h2>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={labelStyle}>Platforms</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {PLATFORMS.map(p => (
-                    <button key={p} onClick={() => toggle(platforms, p, setPlatforms)}
-                      className={`px-4 py-2 rounded-lg text-sm transition-colors
-                        ${platforms.includes(p) ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
-                      {p}
-                    </button>
+                    <button key={p} onClick={() => toggle(platforms, p, setPlatforms)} style={platforms.includes(p) ? btnActive : btnInactive}>{p}</button>
                   ))}
                 </div>
               </div>
-              <div className="space-y-3">
-                <Label className="text-zinc-300">Content types</Label>
-                <div className="flex flex-wrap gap-2">
+              <div>
+                <label style={labelStyle}>Content types</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {CONTENT_TYPES.map(ct => (
-                    <button key={ct} onClick={() => toggle(contentTypes, ct, setContentTypes)}
-                      className={`px-4 py-2 rounded-lg text-sm transition-colors
-                        ${contentTypes.includes(ct) ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
-                      {ct}
-                    </button>
+                    <button key={ct} onClick={() => toggle(contentTypes, ct, setContentTypes)} style={contentTypes.includes(ct) ? btnActive : btnInactive}>{ct}</button>
                   ))}
                 </div>
               </div>
-            </section>
+            </div>
 
             {/* Campaign brief */}
-            <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-5">
-              <h2 className="text-lg font-semibold text-white">Campaign brief</h2>
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Brief summary</Label>
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Campaign brief</h2>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={labelStyle}>Brief summary</label>
                 <Textarea value={briefSummary} onChange={e => setBriefSummary(e.target.value)}
                   placeholder="Describe your campaign goals, product, and what you want creators to convey..."
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 min-h-[120px]" />
+                  className="min-h-[120px]" style={{ background: '#F6F7F9', border: '1.5px solid #DADADE', color: '#1F1F21' }} />
               </div>
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Key messages (one per line)</Label>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={labelStyle}>Key messages (one per line)</label>
                 <Textarea value={keyMessages} onChange={e => setKeyMessages(e.target.value)}
-                  placeholder="Our product solves X&#10;Key benefit: Y&#10;Unique differentiator: Z"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 min-h-[80px]" />
+                  placeholder={'Our product solves X\nKey benefit: Y\nUnique differentiator: Z'}
+                  className="min-h-[80px]" style={{ background: '#F6F7F9', border: '1.5px solid #DADADE', color: '#1F1F21' }} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Hashtags</Label>
-                  <Input value={hashtags} onChange={e => setHashtags(e.target.value)}
-                    placeholder="#brand, #campaign, #product"
-                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Hashtags</label>
+                  <input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="#brand, #campaign" style={inputStyle} />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Call to action</Label>
-                  <Input value={cta} onChange={e => setCta(e.target.value)}
-                    placeholder="Shop now at link in bio"
-                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500" />
+                <div>
+                  <label style={labelStyle}>Call to action</label>
+                  <input value={cta} onChange={e => setCta(e.target.value)} placeholder="Shop now at link in bio" style={inputStyle} />
                 </div>
               </div>
-            </section>
+            </div>
 
             {/* Creator preferences */}
-            <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-5">
-              <h2 className="text-lg font-semibold text-white">Creator preferences</h2>
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Minimum followers</Label>
-                <Input value={minFollowers} onChange={e => setMinFollowers(e.target.value)} type="number"
-                  placeholder="10000" className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500" />
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem' }}>Creator preferences</h2>
+              <div>
+                <label style={labelStyle}>Minimum followers</label>
+                <input value={minFollowers} onChange={e => setMinFollowers(e.target.value)} type="number" placeholder="10000" style={{ ...inputStyle, maxWidth: 240 }} />
               </div>
-            </section>
+            </div>
 
-            <Button onClick={handleSubmit} disabled={loading || !name}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6 text-lg rounded-xl">
-              {loading ? 'Creating...' : 'Generate My Campaign →'}
-            </Button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading || !name}
+              style={{
+                width: '100%',
+                padding: '1rem',
+                background: loading || !name ? '#FFD7C5' : '#FF6117',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                fontSize: '1.05rem',
+                fontWeight: 700,
+                cursor: loading || !name ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 20px rgba(255,97,23,0.35)',
+                transition: 'background 0.15s',
+              }}
+            >
+              {loading ? 'Creating campaign…' : 'Generate My Campaign →'}
+            </button>
           </div>
 
           {/* Sidebar preview */}
-          <div className="space-y-6">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sticky top-24">
-              <h3 className="font-semibold text-white mb-4">Campaign Preview</h3>
-              
-              <div className="space-y-3 mb-6">
-                <div>
-                  <div className="text-zinc-500 text-xs mb-1">Name</div>
-                  <div className="text-white text-sm">{name || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-zinc-500 text-xs mb-1">Objective</div>
-                  <div className="text-white text-sm">{objective || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-zinc-500 text-xs mb-1">Platforms</div>
-                  <div className="text-white text-sm">{platforms.join(', ') || '—'}</div>
-                </div>
-                {budget && (
-                  <div>
-                    <div className="text-zinc-500 text-xs mb-1">Budget</div>
-                    <div className="text-white text-sm">${parseFloat(budget).toLocaleString()}</div>
+          <div style={{ position: 'sticky', top: 88 }}>
+            <div style={{ background: '#fff', border: '1px solid #DADADE', borderRadius: 16, padding: '1.75rem', boxShadow: '0 2px 8px rgba(28,21,73,0.04)' }}>
+              <h3 style={{ fontWeight: 700, color: '#1C1549', marginBottom: '1.25rem', fontSize: '0.95rem' }}>Campaign preview</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginBottom: '1.5rem' }}>
+                {[
+                  { label: 'Name', value: name || '—' },
+                  { label: 'Objective', value: objective || '—' },
+                  { label: 'Platforms', value: platforms.join(', ') || '—' },
+                  ...(budget ? [{ label: 'Budget', value: `$${parseFloat(budget).toLocaleString()}` }] : []),
+                ].map(item => (
+                  <div key={item.label}>
+                    <div style={{ color: '#9C9CA3', fontSize: '0.75rem', marginBottom: 2 }}>{item.label}</div>
+                    <div style={{ color: '#1C1549', fontSize: '0.9rem', fontWeight: 500 }}>{item.value}</div>
                   </div>
-                )}
+                ))}
               </div>
 
               {budgetNum > 0 && (
                 <div>
-                  <div className="text-zinc-500 text-xs mb-3">Budget allocation</div>
-                  <div className="h-40">
+                  <div style={{ color: '#9C9CA3', fontSize: '0.75rem', marginBottom: 12 }}>Budget allocation</div>
+                  <div style={{ height: 140 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={budgetData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value">
+                        <Pie data={budgetData} cx="50%" cy="50%" innerRadius={38} outerRadius={58} dataKey="value">
                           {budgetData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="space-y-2">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {budgetData.map(item => (
-                      <div key={item.name} className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="text-zinc-400">{item.name}</span>
+                      <div key={item.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.color }} />
+                          <span style={{ color: '#7B7B84', fontSize: '0.8rem' }}>{item.name}</span>
                         </div>
-                        <span className="text-white">${item.value.toLocaleString()}</span>
+                        <span style={{ color: '#1C1549', fontSize: '0.8rem', fontWeight: 600 }}>${item.value.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {!budgetNum && (
+                <div style={{ background: '#F6F5FF', border: '1px solid #D2CDF3', borderRadius: 10, padding: '1rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>🤖</div>
+                  <p style={{ color: '#5240CC', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                    AI will find the best creators, score their fit, and write personalized outreach for you.
+                  </p>
                 </div>
               )}
             </div>

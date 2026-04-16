@@ -1,49 +1,116 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createSupabaseBrowserClient } from '@/lib/supabase'
-import { Button } from './ui/button'
+import { usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 
-export function Nav() {
+const LogoIcon = () => (
+  <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" aria-hidden>
+    <circle cx="6" cy="6" r="3" fill="currentColor"/>
+    <circle cx="18" cy="6" r="3" fill="currentColor"/>
+    <circle cx="30" cy="6" r="3" fill="currentColor"/>
+    <circle cx="6" cy="18" r="3" fill="currentColor"/>
+    <circle cx="18" cy="18" r="3" fill="currentColor"/>
+    <circle cx="30" cy="18" r="3" fill="currentColor"/>
+    <circle cx="6" cy="30" r="3" fill="currentColor"/>
+    <circle cx="18" cy="30" r="3" fill="currentColor"/>
+    <circle cx="30" cy="30" r="3" fill="currentColor"/>
+  </svg>
+)
+
+interface NavProps {
+  user?: { email: string; name: string } | null
+}
+
+export function Nav({ user }: NavProps) {
   const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createSupabaseBrowserClient()
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    toast.success('Signed out')
-    router.push('/login')
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      toast.success('Signed out')
+      window.location.href = '/login'
+    } catch {
+      window.location.href = '/login'
+    }
   }
 
   const links = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/campaigns/new', label: 'New Campaign' },
+    { href: '/campaigns', label: 'Campaigns' },
     { href: '/billing', label: 'Billing' },
   ]
 
+  const isActive = (href: string) => {
+    if (href === '/campaigns') return pathname.startsWith('/campaigns')
+    return pathname === href || pathname.startsWith(href + '/')
+  }
+
   return (
-    <nav className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-50">
+    <nav style={{ background: '#1C1549', borderBottom: '1px solid #261D64' }} className="sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-xl font-bold text-white">
-              Launch<span className="text-indigo-400">Pad</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-1">
-              {links.map(link => (
-                <Link key={link.href} href={link.href}
-                  className={`px-4 py-2 rounded-lg text-sm transition-colors
-                    ${pathname.startsWith(link.href) && link.href !== '/campaigns/new' ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>
-                  {link.label}
-                </Link>
-              ))}
+          {/* Logo */}
+          <Link href="/dashboard" className="flex items-center gap-2.5 group" style={{ textDecoration: 'none' }}>
+            <div style={{ color: '#FF7B3E' }}>
+              <LogoIcon />
             </div>
+            <div className="leading-tight">
+              <div style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.01em', lineHeight: 1.1 }}>
+                LaunchPad
+              </div>
+              <div style={{ color: '#BBB4EC', fontSize: '0.6rem', fontWeight: 500, letterSpacing: '0.04em', lineHeight: 1.1 }}>
+                BY CREATORDB
+              </div>
+            </div>
+          </Link>
+
+          {/* Nav links */}
+          <div className="hidden md:flex items-center gap-1">
+            {links.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                style={{
+                  color: isActive(link.href) ? '#FF7B3E' : '#D2CDF3',
+                  background: isActive(link.href) ? 'rgba(255,123,62,0.12)' : 'transparent',
+                  padding: '0.4rem 0.9rem',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: isActive(link.href) ? 600 : 400,
+                  textDecoration: 'none',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-zinc-400 hover:text-white">
-            Sign out
-          </Button>
+
+          {/* User area */}
+          <div className="flex items-center gap-3">
+            {user && (
+              <span style={{ color: '#8E82E2', fontSize: '0.8rem', display: 'none' }} className="sm:block">
+                {user.email}
+              </span>
+            )}
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'rgba(255,97,23,0.15)',
+                border: '1px solid rgba(255,97,23,0.3)',
+                color: '#FF7B3E',
+                padding: '0.4rem 1rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
     </nav>

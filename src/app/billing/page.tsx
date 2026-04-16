@@ -22,9 +22,8 @@ const PLANS = [
       'Email outreach',
       'Basic analytics',
     ],
-    color: 'border-zinc-700',
-    button: 'border-zinc-700 text-zinc-300 hover:bg-zinc-800',
-    badge: null,
+    popular: false,
+    bestValue: false,
   },
   {
     name: 'Growth',
@@ -39,9 +38,8 @@ const PLANS = [
       'Contract generation',
       'Priority support',
     ],
-    color: 'border-indigo-500',
-    button: 'bg-indigo-600 hover:bg-indigo-500 text-white',
-    badge: 'Most Popular',
+    popular: true,
+    bestValue: false,
   },
   {
     name: 'Enterprise',
@@ -56,9 +54,8 @@ const PLANS = [
       'Team collaboration',
       'SLA guarantee',
     ],
-    color: 'border-purple-500',
-    button: 'bg-purple-600 hover:bg-purple-500 text-white',
-    badge: 'Best Value',
+    popular: false,
+    bestValue: true,
   },
 ]
 
@@ -73,8 +70,7 @@ export default function BillingPage() {
 
   const handleCheckout = async () => {
     setProcessing(true)
-    await new Promise(r => setTimeout(r, 2000)) // Simulate processing
-    
+    await new Promise(r => setTimeout(r, 2000))
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -92,120 +88,160 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div style={{ minHeight: '100vh', background: '#F6F7F9' }}>
       <Nav />
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-3 mb-8">
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+        {/* Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1C1549 0%, #35288A 100%)',
+          borderRadius: 20,
+          padding: '2.5rem',
+          marginBottom: '2.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}>
           <div>
-            <h1 className="text-3xl font-bold text-white">Billing & Plans</h1>
-            <p className="text-zinc-400 mt-1">Upgrade to unlock more features</p>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 4 }}>Billing & plans</h1>
+            <p style={{ color: '#BBB4EC', fontSize: '0.95rem' }}>Upgrade to unlock more features and scale your campaigns</p>
           </div>
-          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs ml-auto">
-            🎭 Demo Mode — No real charges
-          </Badge>
+          <span style={{ background: 'rgba(255,191,8,0.2)', border: '1px solid rgba(255,191,8,0.4)', color: '#FFBF08', padding: '0.4rem 1rem', borderRadius: 100, fontSize: '0.8rem', fontWeight: 600 }}>
+            🎭 Demo mode — no real charges
+          </span>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        {/* Pricing cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
           {PLANS.map(plan => (
-            <div key={plan.name}
-              className={`bg-zinc-900 border-2 rounded-2xl p-6 relative flex flex-col ${plan.color}`}>
-              {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white
-                    ${plan.name === 'Growth' ? 'bg-indigo-600' : 'bg-purple-600'}`}>
-                    {plan.badge}
+            <div
+              key={plan.name}
+              style={{
+                background: '#fff',
+                border: plan.popular ? '2px solid #FF6117' : '1.5px solid #DADADE',
+                borderRadius: 20,
+                padding: '2rem',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                boxShadow: plan.popular ? '0 8px 32px rgba(255,97,23,0.15)' : '0 2px 8px rgba(28,21,73,0.04)',
+              }}
+            >
+              {plan.popular && (
+                <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)' }}>
+                  <span style={{ background: '#FF6117', color: '#fff', padding: '0.3rem 1.2rem', borderRadius: 100, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    ⭐ Most Popular
+                  </span>
+                </div>
+              )}
+              {plan.bestValue && (
+                <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)' }}>
+                  <span style={{ background: '#5240CC', color: '#fff', padding: '0.3rem 1.2rem', borderRadius: 100, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    💎 Best Value
                   </span>
                 </div>
               )}
 
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-white">{plan.name}</h3>
-                <p className="text-zinc-400 text-sm mt-1">{plan.description}</p>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">${plan.price}</span>
-                  <span className="text-zinc-400">/month</span>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1C1549', marginBottom: 4 }}>{plan.name}</h3>
+                <p style={{ color: '#7B7B84', fontSize: '0.875rem' }}>{plan.description}</p>
+                <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span style={{ fontSize: '2.5rem', fontWeight: 800, color: plan.popular ? '#FF6117' : '#1C1549' }}>${plan.price}</span>
+                  <span style={{ color: '#9C9CA3', fontSize: '0.9rem' }}>/month</span>
                 </div>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul style={{ flex: 1, marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {plan.features.map(feat => (
-                  <li key={feat} className="flex items-start gap-2 text-sm text-zinc-300">
-                    <span className="text-emerald-400 mt-0.5">✓</span>
+                  <li key={feat} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: '0.875rem', color: '#505057' }}>
+                    <span style={{ color: '#2AE5B0', fontWeight: 700, flexShrink: 0, marginTop: 1 }}>✓</span>
                     {feat}
                   </li>
                 ))}
               </ul>
 
-              <Button
+              <button
                 onClick={() => setSelectedPlan(plan)}
-                variant={plan.name === 'Starter' ? 'outline' : 'default'}
-                className={`w-full ${plan.button}`}>
+                style={{
+                  width: '100%',
+                  padding: '0.875rem',
+                  background: plan.popular ? '#FF6117' : plan.bestValue ? '#5240CC' : '#F6F7F9',
+                  color: plan.popular || plan.bestValue ? '#fff' : '#1C1549',
+                  border: plan.popular || plan.bestValue ? 'none' : '1.5px solid #DADADE',
+                  borderRadius: 10,
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: plan.popular ? '0 4px 16px rgba(255,97,23,0.3)' : 'none',
+                }}
+              >
                 Get {plan.name}
-              </Button>
+              </button>
             </div>
           ))}
         </div>
 
-        <p className="text-center text-zinc-500 text-sm mt-8">
+        <p style={{ textAlign: 'center', color: '#9C9CA3', fontSize: '0.85rem' }}>
           🔒 All plans include a 14-day money-back guarantee. Cancel anytime.
         </p>
       </main>
 
       {/* Checkout modal */}
       <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md">
+        <DialogContent style={{ background: '#fff', border: '1px solid #DADADE', maxWidth: 440 }}>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle style={{ color: '#1C1549', display: 'flex', alignItems: 'center', gap: 8 }}>
               Checkout — {selectedPlan?.name} Plan
-              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">Demo</Badge>
+              <Badge style={{ background: 'rgba(255,191,8,0.15)', color: '#A37000', border: '1px solid rgba(255,191,8,0.3)', fontSize: '0.7rem' }}>Demo</Badge>
             </DialogTitle>
           </DialogHeader>
 
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-amber-400 text-sm mb-4">
+          <div style={{ background: 'rgba(255,191,8,0.08)', border: '1px solid rgba(255,191,8,0.3)', borderRadius: 8, padding: '0.75rem 1rem', color: '#A37000', fontSize: '0.85rem', marginBottom: '1rem' }}>
             🎭 This is a demo. No real payment will be processed.
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-zinc-300">Cardholder name</Label>
-              <Input value={name} onChange={e => setName(e.target.value)}
-                placeholder="John Smith" className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <Label style={{ color: '#1F1F21', fontWeight: 600, fontSize: '0.875rem' }}>Cardholder name</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} placeholder="John Smith"
+                style={{ marginTop: 6, background: '#F6F7F9', border: '1.5px solid #DADADE', color: '#1F1F21' }} />
             </div>
-            <div className="space-y-2">
-              <Label className="text-zinc-300">Card number</Label>
-              <Input value={cardNum} onChange={e => setCardNum(e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 '))}
+            <div>
+              <Label style={{ color: '#1F1F21', fontWeight: 600, fontSize: '0.875rem' }}>Card number</Label>
+              <Input value={cardNum}
+                onChange={e => setCardNum(e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 '))}
                 placeholder="4242 4242 4242 4242" maxLength={19}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 font-mono" />
+                style={{ marginTop: 6, background: '#F6F7F9', border: '1.5px solid #DADADE', color: '#1F1F21', fontFamily: 'monospace' }} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Expiry</Label>
-                <Input value={expiry} onChange={e => setExpiry(e.target.value)}
-                  placeholder="MM/YY" maxLength={5}
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 font-mono" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <Label style={{ color: '#1F1F21', fontWeight: 600, fontSize: '0.875rem' }}>Expiry</Label>
+                <Input value={expiry} onChange={e => setExpiry(e.target.value)} placeholder="MM/YY" maxLength={5}
+                  style={{ marginTop: 6, background: '#F6F7F9', border: '1.5px solid #DADADE', color: '#1F1F21', fontFamily: 'monospace' }} />
               </div>
-              <div className="space-y-2">
-                <Label className="text-zinc-300">CVV</Label>
-                <Input value={cvv} onChange={e => setCvv(e.target.value.replace(/\D/g, ''))}
-                  placeholder="123" maxLength={4} type="password"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500" />
+              <div>
+                <Label style={{ color: '#1F1F21', fontWeight: 600, fontSize: '0.875rem' }}>CVV</Label>
+                <Input value={cvv} onChange={e => setCvv(e.target.value.replace(/\D/g, ''))} placeholder="123" maxLength={4} type="password"
+                  style={{ marginTop: 6, background: '#F6F7F9', border: '1.5px solid #DADADE', color: '#1F1F21' }} />
               </div>
             </div>
 
-            <div className="border-t border-zinc-800 pt-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-zinc-400">{selectedPlan?.name} Plan</span>
-                <span className="text-white">${selectedPlan?.price}/mo</span>
+            <div style={{ borderTop: '1px solid #ECECEE', paddingTop: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.875rem' }}>
+                <span style={{ color: '#7B7B84' }}>{selectedPlan?.name} Plan</span>
+                <span style={{ color: '#1C1549', fontWeight: 600 }}>${selectedPlan?.price}/mo</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Total today</span>
-                <span className="text-white font-bold">${selectedPlan?.price}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
+                <span style={{ color: '#7B7B84' }}>Total today</span>
+                <span style={{ color: '#1C1549', fontWeight: 800 }}>${selectedPlan?.price}</span>
               </div>
             </div>
 
             <Button onClick={handleCheckout} disabled={processing}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6 text-lg">
-              {processing ? 'Processing...' : `Pay $${selectedPlan?.price} (Demo)`}
+              style={{ background: processing ? '#FFD7C5' : '#FF6117', color: '#fff', border: 'none', padding: '0.875rem', fontWeight: 700, fontSize: '1rem', cursor: processing ? 'not-allowed' : 'pointer', boxShadow: '0 4px 16px rgba(255,97,23,0.3)' }}
+              className="w-full">
+              {processing ? 'Processing…' : `Pay $${selectedPlan?.price} (Demo)`}
             </Button>
           </div>
         </DialogContent>

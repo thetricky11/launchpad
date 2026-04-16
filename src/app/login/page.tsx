@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +9,6 @@ import { toast } from 'sonner'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,12 +19,16 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
-      router.push('/dashboard')
-      router.refresh()
+      if (!data.session) throw new Error('No session returned')
+      toast.success('Signed in!')
+      // Use hard redirect to ensure middleware picks up the new cookie
+      window.location.href = '/dashboard'
     } catch (err: unknown) {
-      toast.error((err as Error).message || 'Login failed')
+      const message = (err as Error).message || 'Login failed'
+      toast.error(message)
+      console.error('Login error:', message)
     } finally {
       setLoading(false)
     }
@@ -104,7 +106,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-zinc-500 mt-6">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/signup" className="text-indigo-400 hover:text-indigo-300">Sign up</Link>
         </p>
       </div>

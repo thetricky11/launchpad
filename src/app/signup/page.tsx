@@ -36,7 +36,7 @@ export default function SignupPage() {
       if (signInError) throw signInError
 
       toast.success('Account created! Let\'s set up your brand.')
-      router.push('/onboarding')
+      window.location.href = '/onboarding'
     } catch (err: unknown) {
       toast.error((err as Error).message || 'Signup failed')
     } finally {

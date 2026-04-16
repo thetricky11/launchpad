@@ -4,7 +4,20 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Nav } from '@/components/nav'
 import { toast } from 'sonner'
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
+import dynamic from 'next/dynamic'
+
+const RechartsWrapper = dynamic(() => import('recharts').then(mod => {
+  const { PieChart, Pie, Cell, ResponsiveContainer } = mod
+  return { default: ({ data }: { data: { name: string; value: number; color: string }[] }) => (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie data={data} cx="50%" cy="50%" innerRadius={38} outerRadius={58} dataKey="value">
+          {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+        </Pie>
+      </PieChart>
+    </ResponsiveContainer>
+  )}
+}), { ssr: false, loading: () => <div style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9C9CA3' }}>Loading chart...</div> })
 
 const PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'Twitter/X', 'LinkedIn']
 const CONTENT_TYPES = ['Reels/Short Video', 'Stories', 'Static Post', 'YouTube Video', 'TikTok', 'Blog Post', 'Live Stream']
@@ -260,13 +273,7 @@ export default function NewCampaignPage() {
                 <div>
                   <div style={{ color: '#9C9CA3', fontSize: '0.75rem', marginBottom: 12 }}>Budget allocation</div>
                   <div style={{ height: 140 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={budgetData} cx="50%" cy="50%" innerRadius={38} outerRadius={58} dataKey="value">
-                          {budgetData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <RechartsWrapper data={budgetData} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {budgetData.map(item => (
